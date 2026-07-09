@@ -19,13 +19,12 @@ export default function SubmitView({ onAdd, saving }) {
     setSavedMsg("");
 
     if (!form.age || !form.category || !form.situation.trim() || !form.tried.trim() || !form.outcome.trim()) {
-      setErrorMsg("Fill in the age, topic, situation, what you tried, and the outcome — those are what make a case useful to someone else.");
+      setErrorMsg("Fill in the age, topic, situation, what you tried, and the outcome - those are what make a case useful to someone else.");
       return;
     }
 
     const tags = form.tags.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
     const newCase = {
-      id: `user-${Date.now()}`,
       age: form.age,
       category: form.category,
       situation: form.situation.trim(),
@@ -37,10 +36,10 @@ export default function SubmitView({ onAdd, saving }) {
 
     const ok = await onAdd(newCase);
     if (ok) {
-      setSavedMsg("Added — saved in this browser so it'll be here next time you visit.");
+      setSavedMsg("Added - saved to the shared case library.");
       setForm(EMPTY_FORM);
     } else {
-      setErrorMsg("Couldn't save that just now — please try again.");
+      setErrorMsg("Couldn't save that just now - please try again.");
     }
   }
 
@@ -83,7 +82,7 @@ export default function SubmitView({ onAdd, saving }) {
 
       <label className="field-label">
         Outcome
-        <textarea className="textarea" rows={2} value={form.outcome} onChange={e => update("outcome", e.target.value)} placeholder="What happened after — did it help?" />
+        <textarea className="textarea" rows={2} value={form.outcome} onChange={e => update("outcome", e.target.value)} placeholder="What happened after - did it help?" />
       </label>
 
       <div className="field-row">
@@ -107,7 +106,7 @@ export default function SubmitView({ onAdd, saving }) {
       <button className="btn-primary" type="submit" disabled={saving} data-cursor="pointer">
         <Plus size={16} /> Add this case
       </button>
-      <p className="storage-note">Stored in this browser only for now — see the README for how to make it shared.</p>
+      <p className="storage-note">Saved to the shared case library once the database is configured.</p>
     </form>
   );
 }

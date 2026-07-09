@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { BookOpen, MessageCircle, Plus } from "lucide-react";
 import { SEED_CASES } from "./data/cases.js";
-import { loadUserCases, saveUserCases } from "./lib/storage.js";
+import { loadUserCases, saveUserCase } from "./lib/storage.js";
 import CustomCursor from "./components/CustomCursor.jsx";
 import BrowseView from "./components/BrowseView.jsx";
 import AskView from "./components/AskView.jsx";
@@ -15,18 +15,35 @@ export default function App() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setUserCases(loadUserCases());
+    let cancelled = false;
+
+    loadUserCases()
+      .then(cases => {
+        if (!cancelled) setUserCases(cases);
+      })
+      .catch(err => {
+        console.error("Failed to load shared cases", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const allCases = useMemo(() => [...SEED_CASES, ...userCases], [userCases]);
 
   async function handleAddCase(newCase) {
     setSaving(true);
-    const updated = [newCase, ...userCases];
-    const ok = saveUserCases(updated);
-    if (ok) setUserCases(updated);
-    setSaving(false);
-    return ok;
+    try {
+      const savedCase = await saveUserCase(newCase);
+      setUserCases(current => [savedCase, ...current]);
+      return true;
+    } catch (err) {
+      console.error("Failed to save shared case", err);
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
