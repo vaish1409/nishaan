@@ -3,7 +3,11 @@ import { BAND_LABELS, OUTCOME_META } from "../data/cases.js";
 export default function CaseCard({ c, delay = 0 }) {
   const meta = OUTCOME_META[c.outcomeType] || OUTCOME_META.mixed;
   return (
-    <div className="case-card" style={{ animationDelay: `${delay}ms` }} data-cursor="pointer">
+    <div
+      className="case-card"
+      style={{ animationDelay: `${delay}ms`, "--outcome-color": meta.color }}
+      data-cursor="pointer"
+    >
       <div className="case-card-top">
         <span className="case-id">{c.id}</span>
         <span className="case-age">{BAND_LABELS[c.age] || c.age}</span>

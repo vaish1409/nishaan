@@ -1,11 +1,19 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { BookOpen, MessageCircle, Plus } from "lucide-react";
 import { SEED_CASES } from "./data/cases.js";
 import { loadUserCases, saveUserCase } from "./lib/storage.js";
 import CustomCursor from "./components/CustomCursor.jsx";
+import Hero from "./components/Hero.jsx";
+import Reveal from "./components/Reveal.jsx";
 import BrowseView from "./components/BrowseView.jsx";
 import AskView from "./components/AskView.jsx";
 import SubmitView from "./components/SubmitView.jsx";
+
+const TABS = [
+  { key: "browse", label: "Browse cases", Icon: BookOpen },
+  { key: "ask", label: "Ask about a situation", Icon: MessageCircle },
+  { key: "submit", label: "Add a case", Icon: Plus },
+];
 
 export default function App() {
   const [tab, setTab] = useState("browse");
@@ -13,6 +21,9 @@ export default function App() {
   const [ageFilter, setAgeFilter] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const tabRefs = useRef({});
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +42,22 @@ export default function App() {
   }, []);
 
   const allCases = useMemo(() => [...SEED_CASES, ...userCases], [userCases]);
+
+  useEffect(() => {
+    const el = tabRefs.current[tab];
+    if (el) {
+      setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+  }, [tab, allCases.length]);
+
+  useEffect(() => {
+    function onResize() {
+      const el = tabRefs.current[tab];
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [tab]);
 
   async function handleAddCase(newCase) {
     setSaving(true);
@@ -55,16 +82,24 @@ export default function App() {
         <span className="brand-tagline">Case notes for parents figuring it out as they go</span>
       </header>
 
-      <nav className="tabs">
-        <button className={`tab-btn ${tab === "browse" ? "tab-active" : ""}`} onClick={() => setTab("browse")} data-cursor="pointer">
-          <BookOpen size={15} /> Browse cases
-        </button>
-        <button className={`tab-btn ${tab === "ask" ? "tab-active" : ""}`} onClick={() => setTab("ask")} data-cursor="pointer">
-          <MessageCircle size={15} /> Ask about a situation
-        </button>
-        <button className={`tab-btn ${tab === "submit" ? "tab-active" : ""}`} onClick={() => setTab("submit")} data-cursor="pointer">
-          <Plus size={15} /> Add a case
-        </button>
+      <Hero caseCount={allCases.length} />
+
+      <nav
+        className="tabs"
+        style={{ "--indicator-left": `${indicator.left}px`, "--indicator-width": `${indicator.width}px` }}
+      >
+        {TABS.map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            ref={el => (tabRefs.current[key] = el)}
+            className={`tab-btn ${tab === key ? "tab-active" : ""}`}
+            onClick={() => setTab(key)}
+            data-cursor="pointer"
+          >
+            <Icon size={15} /> {label}
+          </button>
+        ))}
+        <span className="tab-indicator" aria-hidden="true" />
       </nav>
 
       <main className="app-main">
@@ -83,10 +118,10 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="app-footer">
+      <Reveal as="footer" className="app-footer">
         Prototype only — case notes are illustrative, not verified expert advice. If a child's safety is at risk,
         call CHILDLINE <strong>1098</strong>.
-      </footer>
+      </Reveal>
     </div>
   );
 }

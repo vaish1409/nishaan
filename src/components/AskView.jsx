@@ -6,6 +6,7 @@ import { checkSafety } from "../lib/safety.js";
 import { getGuidance } from "../lib/guidance.js";
 import CaseCard from "./CaseCard.jsx";
 import SafetyPanel from "./SafetyPanel.jsx";
+import Reveal from "./Reveal.jsx";
 
 export default function AskView({ cases }) {
   const [ageFilter, setAgeFilter] = useState(null);
@@ -119,7 +120,9 @@ export default function AskView({ cases }) {
           <div className="cited-label">Cases this drew from</div>
           <div className="case-grid">
             {matches.map((c, i) => (
-              <CaseCard key={c.id} c={c} delay={i * 35} />
+              <Reveal key={c.id} delay={i * 60}>
+                <CaseCard c={c} />
+              </Reveal>
             ))}
           </div>
         </div>

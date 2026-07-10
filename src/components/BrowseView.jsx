@@ -1,6 +1,7 @@
 import { CATEGORIES } from "../data/cases.js";
 import AgeRuler from "./AgeRuler.jsx";
 import CaseCard from "./CaseCard.jsx";
+import Reveal from "./Reveal.jsx";
 
 export default function BrowseView({ cases, ageFilter, setAgeFilter, categoryFilter, setCategoryFilter }) {
   const filtered = cases.filter(
@@ -9,9 +10,11 @@ export default function BrowseView({ cases, ageFilter, setAgeFilter, categoryFil
 
   return (
     <div>
-      <AgeRuler selected={ageFilter} onToggle={k => setAgeFilter(ageFilter === k ? null : k)} />
+      <Reveal>
+        <AgeRuler selected={ageFilter} onToggle={k => setAgeFilter(ageFilter === k ? null : k)} />
+      </Reveal>
 
-      <div className="chip-row">
+      <Reveal delay={60} className="chip-row">
         <button
           className={`chip ${!categoryFilter ? "chip-active" : ""}`}
           onClick={() => setCategoryFilter(null)}
@@ -29,7 +32,7 @@ export default function BrowseView({ cases, ageFilter, setAgeFilter, categoryFil
             {cat}
           </button>
         ))}
-      </div>
+      </Reveal>
 
       <div className="result-count">
         {filtered.length} case{filtered.length !== 1 ? "s" : ""}
@@ -40,7 +43,9 @@ export default function BrowseView({ cases, ageFilter, setAgeFilter, categoryFil
       ) : (
         <div className="case-grid">
           {filtered.map((c, i) => (
-            <CaseCard key={c.id} c={c} delay={Math.min(i, 10) * 35} />
+            <Reveal key={c.id} delay={Math.min(i, 10) * 45}>
+              <CaseCard c={c} />
+            </Reveal>
           ))}
         </div>
       )}
