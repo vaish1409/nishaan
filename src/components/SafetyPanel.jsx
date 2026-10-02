@@ -8,12 +8,13 @@ export default function SafetyPanel() {
       </div>
       <p>If a child's safety is at risk right now, please reach out directly rather than waiting on an app:</p>
       <ul>
+        <li><strong>Emergency — 112</strong> (police, ambulance and fire, all over India)</li>
         <li><strong>CHILDLINE — 1098</strong> (24-hour, toll-free, all over India)</li>
         <li><strong>iCall — 9152987821</strong> (free psychosocial support helpline)</li>
       </ul>
       <p className="safety-note">
-        This prototype doesn't screen or respond to situations like this — it only shows case notes for everyday
-        behaviour questions.
+        Nishaan does not respond to situations like this. It only shows case notes for everyday behaviour
+        questions. Helpline numbers can change, so please confirm them before relying on them.
       </p>
     </div>
   );

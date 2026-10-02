@@ -1,17 +1,36 @@
-// This is a minimal, illustrative keyword gate for a prototype — NOT a real
-// safety classifier. It exists so the app never sends certain situations to
-// the AI model at all, and instead points straight to real help. A production
-// version of this would need a properly reviewed detection approach (and
-// likely a second, careful model pass) rather than a hardcoded keyword list.
-const SAFETY_FLAGS = [
-  "suicide", "kill himself", "kill herself", "kill myself", "want to die", "wants to die",
-  "self harm", "self-harm", "cutting himself", "cutting herself", "hurting himself", "hurting herself",
-  "sexually abus", "molest", "rape", "being touched", "beaten badly", "beats him", "beats her",
-  "locks him in", "locks her in", "won't stop hitting", "hits him with", "burned him", "burned her",
-  "starving him", "starving her",
+// Keyword/pattern safety gate. It is still a prototype, NOT a clinical safety classifier: it exists so that
+// the most serious situations never go to the AI model and instead point straight to real help.
+// Used in the browser (instant feedback) AND on the server (api/guidance.js), because a client-side
+// check alone can be bypassed by calling the API directly.
+const PATTERNS = [
+  // self-harm / suicide
+  /\bsuicid\w*/,
+  /\b(kill|killing|hurt|hurting|harm|harming|cut|cutting)\s+(him|her|them|my)self\b/,
+  /\b(kill|killing)\s+(him|her|them)selves\b/,
+  /\bself[\s-]?harm\w*/,
+  /\bwant(s|ed)?\s+to\s+die\b/,
+  /\bend(ing)?\s+(his|her|my|their)\s+life\b/,
+  // sexual abuse
+  /\bsexual(ly)?\s+(abus|assault|molest)\w*/,
+  /\bmolest\w*/,
+  /\brap(e|ed|ing|ist)\b/,
+  /\bbeing\s+touched\b/,
+  /\btouch(ed|es|ing)?\s+(him|her|them)\s+(inappropriately|in private|private parts)\b/,
+  /\binappropriate(ly)?\s+touch\w*/,
+  // physical abuse / neglect
+  /\bbeat(s|en|ing)?\s+(him|her|them|the child|my child)\s+(badly|up|with)\b/,
+  /\bbeaten\s+(badly|up)\b/,
+  /\bhit(s|ting)?\s+(him|her|them)\s+with\b/,
+  /\bburn(ed|t|s)?\s+(him|her|them)\b/,
+  /\block(s|ed|ing)?\s+(him|her|them)\s+(in|up)\b/,
+  /\bstarv(e|es|ed|ing)\s+(him|her|them)\b/,
+  /\bwon'?t\s+stop\s+hitting\b/,
+  // medical emergencies (this app cannot help with these)
+  /\b(not\s+breathing|stopped\s+breathing|unconscious|seizure|overdos\w*|swallowed\s+(poison|pills|bleach|battery))\b/,
+  /\bpoison(ed|ing)?\b/,
 ];
 
 export function checkSafety(text) {
-  const t = (text || "").toLowerCase();
-  return SAFETY_FLAGS.some(flag => t.includes(flag));
+  const t = (text || "").toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ");
+  return PATTERNS.some(rx => rx.test(t));
 }

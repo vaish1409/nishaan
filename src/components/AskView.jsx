@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { MessageCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { BANDS, BAND_LABELS } from "../data/cases.js";
-import { retrieveTopMatches } from "../lib/retrieval.js";
+import { BANDS } from "../data/cases.js";
 import { checkSafety } from "../lib/safety.js";
 import { getGuidance } from "../lib/guidance.js";
 import CaseCard from "./CaseCard.jsx";
@@ -19,29 +18,38 @@ export default function AskView({ cases }) {
   async function handleSubmit() {
     if (!query.trim()) return;
 
+    // Instant client-side check (the server runs the same check again before any model call).
     if (checkSafety(query)) {
       setStatus("flagged");
       return;
     }
 
-    const found = retrieveTopMatches(query, ageFilter, cases, 3);
-    if (found.length === 0) {
-      setMatches([]);
-      setStatus("none");
-      return;
-    }
-
-    setMatches(found);
+    setMatches([]);
+    setResult(null);
     setStatus("loading");
     setErrorMsg("");
 
     try {
-      const withLabels = found.map(c => ({ ...c, ageLabel: BAND_LABELS[c.age] || c.age }));
-      const data = await getGuidance(query, withLabels);
-      setResult(data);
-      setStatus("done");
+      // Retrieval, reranking and answer verification now happen on the server.
+      const data = await getGuidance(query, ageFilter);
+
+      if (data.status === "blocked") {
+        setStatus("flagged");
+      } else if (data.status === "none" || data.status === "ungrounded") {
+        setStatus("none");
+      } else if (data.status === "ok") {
+        setResult(data);
+        setMatches(data.sources || []);
+        setStatus("done");
+      } else {
+        throw new Error("Unexpected response");
+      }
     } catch (e) {
-      setErrorMsg("Couldn't reach the guidance model just now. Please try again in a moment.");
+      setErrorMsg(
+        e.status === 429
+          ? "That's a lot of questions in a short time. Please wait a minute and try again."
+          : "Couldn't reach the guidance model just now. Please try again in a moment."
+      );
       setStatus("error");
     }
   }

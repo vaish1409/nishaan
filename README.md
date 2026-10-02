@@ -123,7 +123,28 @@ Keep `SUPABASE_SERVICE_ROLE_KEY` server-side only. Put it in Vercel Environment 
 
 - The core technique worth naming is **retrieval-grounded generation**: the AI only ever answers using cases actually retrieved for that query, and the app says so explicitly when nothing matches rather than letting the model improvise.
 - The safety gate is intentionally described as illustrative in the code comments — be ready to talk about what a production version would need (a properly reviewed classifier, human-in-the-loop review, logging).
-- `src/lib/retrieval.js` uses simple keyword/tag overlap scoring. A natural "v2" to mention: swap it for embedding similarity (e.g. via the Claude API's embeddings support or a small local model).
+- `src/lib/retrieval.js` uses BM25 ranking (see "Retrieval, reranking and evaluation" below). A natural next step to mention: add embedding similarity and fuse it with BM25.
+
+## Retrieval, reranking and evaluation
+
+How `POST /api/guidance` answers a question (everything runs on the server; the browser only sends the question and age):
+
+1. **Validate and rate-limit** the request (5 to 600 characters, 10 requests per minute per IP, best effort).
+2. **Safety gate** (`src/lib/safety.js`): serious situations never reach a model and get helplines instead.
+3. **Retrieve** with BM25 (`src/lib/retrieval.js`) over the seed cases plus the shared Supabase cases.
+4. **Rerank** with a small Claude model (`server/rerank.js`), which checks meaning and can say "none of these fit".
+5. **Answer** with Claude using only the top cases, as JSON with the case ids it used.
+6. **Verify citations**: ids the model was not given are rejected, and unsupported answers are replaced by "no close match".
+
+Why retrieval moved to the server: the old API trusted whatever "matches" the browser sent, so anyone could POST fake case notes
+to the endpoint. Now the server loads cases itself.
+
+Measure it (no API key needed):
+
+```
+npm run eval            # old vs new retrieval on eval/golden.js
+npm run test:pipeline   # whole API flow with a mocked Claude API
+```
 
 ## License
 
